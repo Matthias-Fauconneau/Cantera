@@ -10,8 +10,10 @@
 #include "cantera/numerics/polyfit.h"
 #include "cantera/base/stringUtils.h"
 #include "cantera/base/global.h"
-
 using namespace std;
+extern size_t debug_key;
+extern double debug_data;
+extern  string debug_info;
 
 namespace Cantera
 {
@@ -234,6 +236,8 @@ void MMCollisionInt::init(doublereal tsmin, doublereal tsmax, int log_level)
         m_nmin = 0;
         m_nmax = 36;
     }
+    std::cerr << "nmin: " << m_nmin << " nmax: " << m_nmax << '\n';
+		writelogf("T*_max = %g\n", tstar[m_nmax + 1]);
     if (m_loglevel > 0) {
         writelogf("T*_min = %g\n", tstar[m_nmin + 1]);
         writelogf("T*_max = %g\n", tstar[m_nmax + 1]);
@@ -332,6 +336,7 @@ doublereal MMCollisionInt::omega22(double ts, double deltastar)
         i2 = 36;
         i1 = i2 - 3;
     }
+    debug_data = i1;
     vector_fp values(3);
     for (i = i1; i < i2; i++) {
         if (deltastar == 0.0) {
@@ -340,6 +345,13 @@ doublereal MMCollisionInt::omega22(double ts, double deltastar)
             values[i-i1] = poly5(deltastar, m_o22poly[i].data());
         }
     }
+    using namespace std;
+		ostringstream s;
+    s<<'#'<<debug_key<<": "<<i1<<' ';
+    s<<'['<< m_logTemp[i1] <<", "<< m_logTemp[i1+1] <<", "<< m_logTemp[i1+2] <<"] ";
+		s<<'['<< values[0] <<", "<< values[1] <<", "<< values[2] <<"] ";
+		s<<ts<<' '<<log(ts);
+		debug_info = s.str();
     return quadInterp(log(ts), &m_logTemp[i1], values.data());
 }
 
